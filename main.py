@@ -43,7 +43,7 @@ def is_armstrong(n: int) -> bool:
 @app.get("/api/classify-number", response_model=NumberClassification)
 def classify_number(number: int | None = Query(None)):
     if number is None:
-        raise HTTPException(status_code=400, detail={"number": None, "error": True})
+        return JSONResponse(status_code=400, content={"number": None, "error": True})
 
     try:
         # Validate number
