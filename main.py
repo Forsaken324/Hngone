@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
 import requests
 
@@ -9,11 +10,21 @@ app = FastAPI()
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this for specific domains in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Custom Exception Handler
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    # Extract the invalid value from the request URL
+    invalid_number = request.query_params.get("number", None)
+    return JSONResponse(
+        status_code=400,
+        content={"number": invalid_number, "error": True}
+    )
 
 # Response model
 class NumberClassification(BaseModel):
@@ -45,29 +56,24 @@ def classify_number(number: int | None = Query(None)):
     if number is None:
         return JSONResponse(status_code=400, content={"number": None, "error": True})
 
-    try:
-        # Validate number
-        digit_sum = sum(int(d) for d in str(abs(number)))
-        prime = is_prime(number)
-        perfect = is_perfect(number)
-        armstrong = is_armstrong(number)
-        parity = "odd" if number % 2 else "even"
+    digit_sum = sum(int(d) for d in str(abs(number)))
+    prime = is_prime(number)
+    perfect = is_perfect(number)
+    armstrong = is_armstrong(number)
+    parity = "odd" if number % 2 else "even"
 
-        properties = [parity]
-        if armstrong:
-            properties.insert(0, "armstrong")
+    properties = [parity]
+    if armstrong:
+        properties.insert(0, "armstrong")
 
-        # Fetch fun fact
-        response = requests.get(f"http://numbersapi.com/{number}/math?json")
-        fun_fact = response.json().get("text", "No fun fact available.")
+    response = requests.get(f"http://numbersapi.com/{number}/math?json")
+    fun_fact = response.json().get("text", "No fun fact available.")
 
-        return NumberClassification(
-            number=number,
-            is_prime=prime,
-            is_perfect=perfect,
-            properties=properties,
-            digit_sum=digit_sum,
-            fun_fact=fun_fact
-        )
-    except ValueError:
-        return JSONResponse(status_code=400, content={"number": number, "error": True})
+    return NumberClassification(
+        number=number,
+        is_prime=prime,
+        is_perfect=perfect,
+        properties=properties,
+        digit_sum=digit_sum,
+        fun_fact=fun_fact
+    )
