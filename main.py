@@ -19,7 +19,6 @@ app.add_middleware(
 # Custom Exception Handler
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    # Extract the invalid value from the request URL
     invalid_number = request.query_params.get("number", None)
     return JSONResponse(
         status_code=400,
@@ -52,9 +51,15 @@ def is_armstrong(n: int) -> bool:
 
 # API Endpoint
 @app.get("/api/classify-number", response_model=NumberClassification)
-def classify_number(number: int | None = Query(None)):
+def classify_number(number: str | None = Query(None)):
     if number is None:
         return JSONResponse(status_code=400, content={"number": None, "error": True})
+
+    # Validate if the input is a valid integer
+    try:
+        number = int(number)
+    except ValueError:
+        return JSONResponse(status_code=400, content={"number": number, "error": True})
 
     digit_sum = sum(int(d) for d in str(abs(number)))
     prime = is_prime(number)
