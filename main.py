@@ -55,7 +55,7 @@ def classify_number(number : str | None = Query(None)):
 
     
         # Validate number
-    digit_sum = sum(int(d) for d in number if d.isdigit())
+    digit_sum = sum(int(d) for d in str(int(abs(number)))
     prime = is_prime(number)
     perfect = is_perfect(number)
     armstrong = is_armstrong(number)
