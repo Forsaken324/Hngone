@@ -69,4 +69,4 @@ def classify_number(number: int | None = Query(None)):
             fun_fact=fun_fact
         )
     except ValueError:
-        raise HTTPException(status_code=400, detail={"number": number, "error": True})
+        raise HTTPException(status_code=400, {"number": number, "error": True})
