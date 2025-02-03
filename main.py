@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import requests
 
@@ -69,4 +70,4 @@ def classify_number(number: int | None = Query(None)):
             fun_fact=fun_fact
         )
     except ValueError:
-        raise HTTPException(status_code=400, {"number": number, "error": True})
+        return JSONResponse(status_code=400, content={"number": number, "error": True})
